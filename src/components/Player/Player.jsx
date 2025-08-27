@@ -1,5 +1,9 @@
 import React from 'react';
 import * as THREE from 'three';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP);
 
 // 3D libraries
 import { RigidBody, useRapier } from '@react-three/rapier';
@@ -7,17 +11,20 @@ import { useKeyboardControls } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import useGame from '@stores/useGame';
 
+const cameraPosition = new THREE.Vector3();
+const cameraTarget = new THREE.Vector3();
+const quaternion = new THREE.Quaternion();
 
 function Player() {
   const playerRef = React.useRef();
   const [ subscribeKeys, getKeys ] = useKeyboardControls();
-  const { rapier, world } = useRapier();
+  // const { rapier, world } = useRapier();
+  const targetPosition = React.useMemo(() => new THREE.Vector3( 0, 0.3, 0 ), []);
+  const targetQuat = React.useMemo(() => new THREE.Quaternion(), []);
 
   // stores
   const start = useGame( (state) => state.start );
-  const end = useGame( (state) => state.end );
   const restart = useGame( (state) => state.restart );
-  const blocksCount = useGame( (state) => state.blocksCount );
   const setPlayer = useGame( (state) => state.setPlayer );
 
   // camera
@@ -29,33 +36,83 @@ function Player() {
     setPlayer( playerRef );
   }, []);
 
-  // jump
-  function jump() {
-    const origin = playerRef.current.translation();
-    origin.y -= 0.31;
-    const direction = { x: 0, y: -1, z: 0 };
-    const ray = new rapier.Ray(origin, direction);
-    const hit = world.castRay(ray, 10, true);
-
-    if (hit.timeOfImpact < 0.15) {
-      playerRef.current.applyImpulse({ x: 0, y: 0.5, z: 0 }); 
-    }
-  }
-
   function reset() {
     playerRef.current.setTranslation({ x: 0, y: 1, z: 0 });
     playerRef.current.setLinvel({ x: 0, y: 0, z: 0 });
     playerRef.current.setAngvel({ x: 0, y: 0, z: 0 });
   }
 
-  React.useEffect(() => {
-    const selectorFunction = ( state ) => state.jump;
-    const listenerFunction = ( value ) => {
-      if ( !value ) return;
-      
-      jump();
-    }
+  // move with gsap
+  useGSAP((context, contextSafe) => {
+    // s / r = angle
+    const rotateStep = 1 / 0.3;
 
+    const target = new THREE.Vector3();
+    const tempQuat = new THREE.Quaternion();
+
+    let isMoving = false;
+
+    gsap.defaults({
+      ease: "sine.out",
+      duration: 0.25,
+      onComplete: () => { isMoving = false; }
+    });
+
+    const moveX = gsap.quickTo( targetPosition, "x" );
+    const moveZ = gsap.quickTo( targetPosition, "z" );
+    const rotateTo = (axis, angle) => {
+      const delta = new THREE.Quaternion().setFromAxisAngle( axis, angle );
+      tempQuat.multiplyQuaternions(delta, tempQuat);
+
+      gsap.to( targetQuat, {
+        x: tempQuat.x,
+        y: tempQuat.y,
+        z: tempQuat.z,
+        w: tempQuat.w,
+      });
+    };
+
+    const move = contextSafe( (dir) => {
+      if (isMoving) return;
+      isMoving = true;
+
+      target.x += dir.x;
+      target.z += dir.z;
+
+      if (dir.x !== 0) {
+        moveX( target.x );
+        // rotate
+        rotateTo( new THREE.Vector3( 0, 0, 1 ), - dir.x * rotateStep );
+      }
+      if (dir.z !== 0) {
+        moveZ( target.z );
+        // rotate
+        rotateTo( new THREE.Vector3( 1, 0, 0 ), dir.z * rotateStep );
+      }
+    });
+
+    const unsubscribeWalk = subscribeKeys(
+      (state) => state,
+      ({ forward, rightward, backward, leftward }) => {
+        if (forward) {
+          move({ x: 0, z: -1 });
+        } else if (backward) {
+          move({ x: 0, z: 1 });
+        } else if (leftward) {
+          move({ x: -1, z: 0 });
+        } else if (rightward) {
+          move({ x: 1, z: 0 });
+        }
+      }
+    );
+
+    return () => {
+      // <-- cleanup
+      unsubscribeWalk();
+	  };
+  }, { dependencies: [ subscribeKeys, targetPosition ] });
+
+  React.useEffect(() => {
     const unsubscribeReset = useGame.subscribe( 
       (state) => state.phase,
       (phase) => {
@@ -63,69 +120,33 @@ function Player() {
       }
     );
 
-    const unsubscribeJump = subscribeKeys(
-      selectorFunction,
-      listenerFunction
-    );
-
     const unsubscribeAny = subscribeKeys(() => {
       start();
     });
 
     return () => {
-      unsubscribeJump();
       unsubscribeAny();
       unsubscribeReset();
     } 
   }, [ subscribeKeys ]);
 
   useFrame((state, delta) => {
-    // movement
-    const { forward, backward, leftward, rightward } = getKeys();
-    
-    // forces 
-    const impulse = { x: 0, y: 0, z: 0 };
-    const torque = { x: 0, y: 0, z: 0 };
+    if (!playerRef.current) return;
+    const playerPosition = playerRef.current.translation();
 
-    const impulseForce = 0.6 * delta;
-    const torqueForce = 0.2 * delta;
+    // player rotation
+    // quaternion.setFromEuler( targetRotation );
+    playerRef.current.setNextKinematicRotation( targetQuat );
 
-    // movement
-    switch (true) {
-      case forward:
-        impulse.z -= impulseForce;
-        torque.x -= torqueForce;
-        break;
-
-      case rightward: 
-        impulse.x += impulseForce;
-        torque.z -= torqueForce;
-        break;
-
-      case backward:
-        impulse.z += impulseForce;
-        torque.x += torqueForce;
-        break;
-
-      case leftward:
-        impulse.x -= impulseForce;
-        torque.z += torqueForce;
-        break;
-    }
-
-    // apply forces
-    playerRef.current.applyImpulse(impulse);
-    playerRef.current.applyTorqueImpulse(torque);
+    // move player
+    playerRef.current.setNextKinematicTranslation( targetPosition );
 
     // control camera position
-    const playerPosition = playerRef.current.translation();
-    const cameraPosition = new THREE.Vector3();
-    cameraPosition.copy(playerPosition);
+    cameraPosition.copy( playerPosition );
     cameraPosition.y += 4;
     // cameraPosition.y += 0.65;
     cameraPosition.z += 2.25;
 
-    const cameraTarget = new THREE.Vector3();
     cameraTarget.copy(playerPosition);
     cameraTarget.y += 0.25;
 
@@ -134,11 +155,6 @@ function Player() {
 
     state.camera.position.copy( smoothedCameraPosition );
     state.camera.lookAt( smoothedCameraTarget );
-
-    // end game
-    if ( playerPosition.z < - ( blocksCount * 4 + 2) ) {
-      end();
-    }
 
     // restart
     if (  playerPosition.y < -4 ) {
@@ -149,11 +165,11 @@ function Player() {
   return (
     <>
       <RigidBody 
-        ref={ playerRef} 
+        ref={ playerRef } 
         name="player"
         canSleep={ false } 
-        colliders="ball" 
-        mass={200}
+        colliders="ball"
+        type="kinematicPosition"
         restitution={0.2} 
         friction={1} 
         linearDamping={0.5}
