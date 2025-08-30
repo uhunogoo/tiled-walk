@@ -1,61 +1,76 @@
 import React from 'react';
-import Bounds from '@components/Bounds/Bounds';
-import { range } from '@lib/utils';
+import * as TSL from 'three/tsl';
 
-const materials = [
-  "white",
-  "black",
-  "red"
-];
+import useGame from '@stores/useGame';
+import Map from '@components/Map/Map';
+import MapBounds from '@components/Map/MapBounds';
+
+import { useControls } from 'leva';
 
 const ROWS = 11;
 const COLUMNS = 7;
 
 function World() {
+  const { rows, columns } = useGame((state) => state.mapSize);
+  const newRows = rows || ROWS;
+  const newColumns = columns || COLUMNS;
+
   return (
     <>
       <Map 
-        rows={ ROWS } 
-        columns={ COLUMNS } 
-        position={[ -COLUMNS / 2, 0, -ROWS ]}
+        rows={ newRows } 
+        columns={ newColumns } 
+        position={[ -newColumns / 2, 0, -newRows ]}
       />
 
-      {/* floor */}
-      <Bounds args={[ COLUMNS * 0.5, 0.1, ROWS * 0.5 ]}  position={[ 0, 0, -ROWS / 2 + 0.5 ]}/>
+      {/* Grid */}
+      <Grid rows={ newRows } columns={ newColumns } />
+
+      {/* floor and walls */}
+      <MapBounds rows={ newRows } columns={ newColumns } />
     </>
   );
 }
 
-function Map({ rows = 11, columns = 11, ...delegated }) {
-  const tiles = React.useMemo(() => {
-    // start and end line
-    const line = range( columns ).map( () => 1 );
+function Grid({ rows = null, columns = null }) {
+  if (!rows || !columns) return null;
+  const { nodes, uniforms } = React.useMemo(() => {
+    const uniforms = {
+      sizes: TSL.uniform( TSL.vec2( columns, rows ) ),
+      colorA: TSL.uniform( TSL.color( 0xe1bf92 ) ),
+      colorB: TSL.uniform( TSL.color( 0xf6d7b0 ) ),
+    };
 
-    // generate map
-    const map = range( rows - 2 ).map( () => range( columns ).map( () => 0 ) );
-;
-    return [
-      line,
-      ...map,
-      line
-    ];
-  }, []);
+    const colorNode = TSL.Fn(() => {
+      const uv = TSL.uv();
+      const thickness = 0.49;
+      const grid = TSL.fract( uv.mul( uniforms.sizes ) );
+      
+      const strength = TSL.step( thickness, TSL.max( TSL.abs( grid.x.sub( 0.5) ), TSL.abs( grid.y.sub( 0.5) ) ));
+      const color = uniforms.colorA;
+
+      const finalColor = TSL.vec4( color, strength );
+      
+      return finalColor;
+    })();
+
+    return {
+      nodes: {
+        colorNode: colorNode,
+        shadow: true,
+        transparent: true
+      },
+      uniforms,
+    };
+  }, [ rows, columns ]);
 
   return (
-    <group dispose={ null } { ...delegated }>
-      {
-        tiles.map( ( row, y ) => row.map( ( cell, x ) => (
-          <mesh
-           key={ `${ x }-${ y }` } 
-           scale={[ 0.9, 0.2, 0.9 ]}
-           position={[ x + 0.5, 0, y + 1 ]}
-         >
-           <boxGeometry args={[1, 1, 1]} />
-           <meshBasicNodeMaterial color={ materials[ cell ] } />
-         </mesh>
-        ) ) )
-      }
-    </group>
+    <>
+      <mesh rotation-x={ -Math.PI / 2 } position-z={ -rows * 0.5 + 0.5 }>
+        <planeGeometry args={[ columns, rows, 1, 1 ]} />
+        <meshBasicNodeMaterial { ...nodes } />
+      </mesh>
+    </>
   );
 }
 

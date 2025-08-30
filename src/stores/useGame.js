@@ -3,7 +3,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 
 export default create( subscribeWithSelector( ( set ) => {
   return {
-    blocksCount: 10,
+    mapSize: { rows: 11, columns: 7 },
     blocksSeed: 0,
     phase: 'ready',
     player: null,

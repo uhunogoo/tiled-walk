@@ -7,17 +7,20 @@ import { KeyboardControls, OrbitControls } from '@react-three/drei';
 
 import World from '@components/World/World';
 import Player from '@components/Player/Player';
+import { useControls } from 'leva';
 
 extend( THREE );
 
 function Scene() {
   const [ frameloop, setFrameloop ] = React.useState( "never" );
+  const { DEBUG } = useControls('Physycs', { DEBUG: false });
 
   const map = React.useMemo(() => [
     { name: 'forward', keys: [ 'ArrowUp', 'KeyW' ] },
     { name: 'backward', keys: [ 'ArrowDown', 'KeyS' ] },
     { name: 'leftward', keys: [ 'ArrowLeft', 'KeyA' ] },
     { name: 'rightward', keys: [ 'ArrowRight', 'KeyD' ] },
+    { name: 'run', keys: [ 'ShiftLeft' ] },
     { name: 'jump', keys: [ 'Space' ] }
   ], []);
 
@@ -46,7 +49,7 @@ function Scene() {
         <directionalLight position={[0, 10, 5]} intensity={1} />
         
         <React.Suspense fallback={null}>
-          <Physics debug={ true } gravity={[0, -9.81, 0]}>
+          <Physics debug={ DEBUG } gravity={[0, -9.81, 0]}>
             <Player />
             <World />
           </Physics>
