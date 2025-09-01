@@ -5,8 +5,6 @@ import useGame from '@stores/useGame';
 import Map from '@components/Map/Map';
 import MapBounds from '@components/Map/MapBounds';
 
-import { useControls } from 'leva';
-
 const ROWS = 11;
 const COLUMNS = 7;
 
@@ -66,7 +64,7 @@ function Grid({ rows = null, columns = null }) {
 
   return (
     <>
-      <mesh rotation-x={ -Math.PI / 2 } position-z={ -rows * 0.5 + 0.5 }>
+      <mesh rotation-x={ -Math.PI / 2 } position-z={ -rows * 0.5 }>
         <planeGeometry args={[ columns, rows, 1, 1 ]} />
         <meshBasicNodeMaterial { ...nodes } />
       </mesh>

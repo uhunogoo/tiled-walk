@@ -4,9 +4,14 @@ import React from 'react';
 import { RigidBody } from '@react-three/rapier';
 import { useKeyboardControls } from '@react-three/drei';
 
+// stores
 import useGame from '@stores/useGame';
-import usePlayerMove from '@hooks/usePlayerMove';
+
+// hooks
 import useCameraFollowPlayer from '@hooks/useCameraFollowPlayer';
+
+// components
+import PlayerMove from '@components/Player/PlayerMove';
 
 
 function Player() {
@@ -32,13 +37,12 @@ function Player() {
   }, [ subscribeKeys ]);
 
   // player and camera move
-  usePlayerMove( playerRef );
   useCameraFollowPlayer( playerRef );
   
   return (
-    <>
-      <RigidBody 
-        ref={ playerRef} 
+    <PlayerMove objectToMove={ playerRef }>
+      <RigidBody
+        ref={ playerRef }
         name="player"
         canSleep={ false } 
         colliders="ball" 
@@ -53,9 +57,8 @@ function Player() {
           <icosahedronGeometry args={[ 0.3, 1 ]} />
           <meshStandardMaterial flatShading color="mediumpurple" />
         </mesh>
-
       </RigidBody>
-    </>
+    </PlayerMove>
   )
 }
 
