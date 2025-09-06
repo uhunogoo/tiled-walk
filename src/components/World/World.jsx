@@ -1,75 +1,95 @@
 import React from 'react';
-import * as TSL from 'three/tsl';
+import * as THREE from 'three/webgpu';
 
+// stores
 import useGame from '@stores/useGame';
-import Map from '@components/Map/Map';
-import MapBounds from '@components/Map/MapBounds';
 
-const ROWS = 11;
-const COLUMNS = 7;
+// components
+import Bounds from '@components/Bounds/Bounds';
+import Tile from '@components/Tile/Tile';
+import usePlayerToGrid from '@hooks/usePlayerToGrid';
+import Field from '@components/Field/Field';
+import { useFrame } from '@react-three/fiber';
+import { worldToGrid } from '@lib/utils';
+// import { range } from '@lib/utils';
+
 
 function World() {
-  const { rows, columns } = useGame((state) => state.mapSize);
-  const newRows = rows || ROWS;
-  const newColumns = columns || COLUMNS;
+  // store
+  const tiles = useGame( (state) => state.tiles );
+  const player = useGame( (state) => state.player );
+  const generateMap = useGame( (state) => state.generateMap );
+  const mapParameters = useGame( (state) => state.mapParameters );
+  
+  React.useEffect(() => {
+    generateMap();
+  }, []);
 
   return (
     <>
-      <Map 
-        rows={ newRows } 
-        columns={ newColumns } 
-        position={[ -newColumns / 2, 0, -newRows ]}
-      />
 
-      {/* Grid */}
-      <Grid rows={ newRows } columns={ newColumns } />
+      <mesh scale={[ mapParameters.columns, 1, 2 ]} position={[ 0, -0.5, 0]}>
+        <boxGeometry args={[ 1, 1, 1 ]} />
+        <meshNormalMaterial />
+      </mesh>
 
-      {/* floor and walls */}
-      <MapBounds rows={ newRows } columns={ newColumns } />
+      <group dispose={ null } position={[ 0, 0.001, -mapParameters.rows * 0.5 - 1 ]}>
+        <PlayerOnMap player={ player } tiles={ tiles } mapParameters={ mapParameters }/>
+        
+        <Field height={ mapParameters.rows } width={ mapParameters.columns }/>
+
+        { tiles.map( ( row, y ) => row.map( ( cell, x ) => 
+          <Tile key={ `${ x }-${ y }` } 
+            position={[ x + 0.5 - mapParameters.columns * 0.5, -0.08, y + 0.5 - mapParameters.rows * 0.5 ]} 
+            scale={[ mapParameters.cellSize, 0.2, mapParameters.cellSize ]} 
+            value={ cell.trap }
+          />
+        ) ) }
+      </group>
+
+      <mesh scale={[ mapParameters.columns, 1, 2 ]} position={[ 0, -0.5, - 2 - mapParameters.rows ]}>
+        <boxGeometry args={[ 1, 1, 1 ]} />
+        <meshNormalMaterial />
+      </mesh>
+
+      <Bounds args={[ mapParameters.columns * 0.5, 0.1, mapParameters.rows * 0.5 + 2 ]} position={[ 0, -0.1, -mapParameters.rows * 0.5 - 1 ]}/>
     </>
   );
 }
 
-function Grid({ rows = null, columns = null }) {
-  if (!rows || !columns) return null;
-  const { nodes, uniforms } = React.useMemo(() => {
-    const uniforms = {
-      sizes: TSL.uniform( TSL.vec2( columns, rows ) ),
-      colorA: TSL.uniform( TSL.color( 0xe1bf92 ) ),
-      colorB: TSL.uniform( TSL.color( 0xf6d7b0 ) ),
-    };
+function PlayerOnMap({ player, mapParameters, tiles = [], radius = 1, children }) {
+  const restart = useGame( (state) => state.restart );
+  const position = React.useMemo(() => new THREE.Vector3(), []);
 
-    const colorNode = TSL.Fn(() => {
-      const uv = TSL.uv();
-      const thickness = 0.49;
-      const grid = TSL.fract( uv.mul( uniforms.sizes ) );
+  useFrame((state, delta) => {
+    if ( !player?.current || !mapParameters || !tiles ) return;
+    
+    const currentPosition = player.current.translation();
+    const [ x, y, z ] = worldToGrid( currentPosition, mapParameters);
+    
+    if ( position.x !== x || position.z !== z ) {
+      position.set( x, y, z );
       
-      const strength = TSL.step( thickness, TSL.max( TSL.abs( grid.x.sub( 0.5) ), TSL.abs( grid.y.sub( 0.5) ) ));
-      const color = uniforms.colorA;
-
-      const finalColor = TSL.vec4( color, strength );
+      const currentTile = tiles[position.z]?.[position.x] ?? null;
       
-      return finalColor;
-    })();
-
-    return {
-      nodes: {
-        colorNode: colorNode,
-        shadow: true,
-        transparent: true
-      },
-      uniforms,
-    };
-  }, [ rows, columns ]);
-
+      if (currentTile?.trap) restart();
+    }
+  });
+    
   return (
     <>
-      <mesh rotation-x={ -Math.PI / 2 } position-z={ -rows * 0.5 }>
-        <planeGeometry args={[ columns, rows, 1, 1 ]} />
-        <meshBasicNodeMaterial { ...nodes } />
-      </mesh>
+      { children }
+      {/* { !!tiles.length && (
+        coordinates.map( ( position, y ) =>
+          <Tile key={ `${ position.x }-${ position.z }` } 
+            position={[ position.x + 0.5, -0.1, position.z + 0.5 ]} 
+            scale={[ mapParameters.cellSize, 0.2, mapParameters.cellSize ]} 
+            value={ tiles[ position.z ][ position.x ] }
+          />
+        ) 
+      ) } */}
     </>
-  );
+  )
 }
 
 export default World;

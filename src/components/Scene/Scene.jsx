@@ -1,26 +1,29 @@
 import * as THREE from 'three/webgpu';
-
 import React from 'react';
+
+// 3D libraries
+import { useControls } from 'leva';
 import { Physics } from '@react-three/rapier';
 import { Canvas, extend } from '@react-three/fiber';
-import { KeyboardControls, OrbitControls } from '@react-three/drei';
+import { KeyboardControls, PerspectiveCamera } from '@react-three/drei';
 
+// components
 import World from '@components/World/World';
 import Player from '@components/Player/Player';
-import { useControls } from 'leva';
+import PlayerController from '@components/PlayerController/PlayerController';
+import CameraController from '@components/CameraController/CameraController';
 
 extend( THREE );
 
 function Scene() {
+  const { debug } = useControls( "Rapier", { debug: true } );
   const [ frameloop, setFrameloop ] = React.useState( "never" );
-  const { DEBUG } = useControls('Physycs', { DEBUG: false });
 
   const map = React.useMemo(() => [
     { name: 'forward', keys: [ 'ArrowUp', 'KeyW' ] },
     { name: 'backward', keys: [ 'ArrowDown', 'KeyS' ] },
     { name: 'leftward', keys: [ 'ArrowLeft', 'KeyA' ] },
     { name: 'rightward', keys: [ 'ArrowRight', 'KeyD' ] },
-    { name: 'run', keys: [ 'ShiftLeft' ] },
     { name: 'jump', keys: [ 'Space' ] }
   ], []);
 
@@ -28,7 +31,7 @@ function Scene() {
     <KeyboardControls map={ map }>
       <Canvas
         style={{ position: 'fixed', top: 0, left: 0, height: "100vh", width: "100vw" }}
-        camera={{ position: [0, 12, 0], fov: 75 }}
+        camera={{ position: [4, 4, 0], fov: 45 }}
         frameloop={ frameloop }
         gl={(props) => {
           const renderer = new THREE.WebGPURenderer({
@@ -49,14 +52,14 @@ function Scene() {
         <directionalLight position={[0, 10, 5]} intensity={1} />
         
         <React.Suspense fallback={null}>
-          <Physics debug={ DEBUG } gravity={[0, -9.81, 0]}>
+          <Physics debug={ debug } gravity={[0, -9.81, 0]}>
             <Player />
+            <CameraController />
+
             <World />
           </Physics>
         </React.Suspense>
-
         {/* <OrbitControls makeDefault /> */}
-
       </Canvas>
     </KeyboardControls>
   )

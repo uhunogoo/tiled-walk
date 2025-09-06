@@ -4,7 +4,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 
 export default create( subscribeWithSelector( ( set ) => {
   return {
-    mapSize: { rows: 11, columns: 7, cellSize: 1 },
+    mapParameters: { rows: 11, columns: 7, cellSize: 0.95 },
     tiles: [],
     blocksSeed: 12345,
     phase: 'ready',
@@ -29,14 +29,21 @@ export default create( subscribeWithSelector( ( set ) => {
     
     return { player }; 
    }),
-   setPlayerPosition: ( position ) => set( ( state ) => {
-    return { playerPosition: position }; 
-   }),
    generateMap: () => set( ( state ) => {
-    const { rows, columns } = state.mapSize;
-    const line = range( columns ).map( () => 1 );
-    const cells = generateMap( rows - 2, columns, state.blocksSeed );
-    return { tiles: [ line, ...cells, line ] };
+    const { rows, columns } = state.mapParameters;
+    const dummyMap = range( rows ).map( () => 
+      range( columns ).map( () => ({
+        visited: false,
+        walkable: false,
+        trap: true
+      }) ) 
+    );
+
+    generateMap( rows, columns, state.blocksSeed, dummyMap );
+
+    // const cells = generateMap( rows - 2, columns, state.blocksSeed );
+    // return { tiles: [ ...map ] };
+    return { tiles: dummyMap };
    }),
   } 
 }) );

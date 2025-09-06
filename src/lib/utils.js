@@ -13,22 +13,24 @@ export const range = (start, end, step = 1) => {
   return output;
 };
 
-export function worldToGrid(x, z, COLUMNS = 11, ROWS = 11) {
-  // world center
-  const col = Math.floor(x + COLUMNS / 2); // X → column
-  const row = Math.floor(z + ROWS / 2);    // Z → row
-  // clamp
-  return [
-    Math.max(0, Math.min(ROWS - 1, row)),
-    Math.max(0, Math.min(COLUMNS - 1, col)),
-  ];
+export function worldToGrid( position, map ) {
+  if ( !position || !map ) return [0, 0, 0];
+  const { rows, columns, cellSize } = map;
+
+  const onGridX = Math.floor( position.x + columns * 0.5 );
+  const onGridZ = Math.round( position.z + ( rows - cellSize * 0.5 + 1) );
+
+  // const snapX = Math.max( 0, Math.min(columns - 1, onGridX) );
+  // const snapZ = Math.max( 0, Math.min(rows - 1, onGridZ) );
+  
+  return [ onGridX, position.y, onGridZ ];
 }
 
-export function generateMap(ROWS, COLUMNS, seed ) {
+export function generateMap(ROWS, COLUMNS, seed, tiles) {
   if (!ROWS || !COLUMNS) return [];
   
-  const tiles = range( ROWS ).map( () => range( COLUMNS ).map( () => 0 ) );
-  
+  // const tiles = range( ROWS ).map( () => range( COLUMNS ).map( () => 0 ) );
+  // const newTiles = [...tiles];
   // Set seeds
   const newSeed = seed || 12345;
   ROT.RNG.setSeed( newSeed );
@@ -45,7 +47,7 @@ export function generateMap(ROWS, COLUMNS, seed ) {
       value = 0;
     }
     if ( (y === 0 && x === end) || (y === ROWS - 1 && x === start) ) {
-      tiles[y][x] = 2;
+      tiles[y][x].trap = false;
     }
     data[`${x}-${y}`] = value;
   });
@@ -58,7 +60,7 @@ export function generateMap(ROWS, COLUMNS, seed ) {
   const astar = new ROT.Path.AStar( end, 1, passableCallback, { topology: 4 } );
 
   astar.compute( start, ROWS - 2, ( x, y ) => {
-    tiles[y][x] = 2;
+    tiles[y][x].trap = false;
   });
 
   return tiles;
