@@ -15,6 +15,7 @@ function PlayerController({ children }) {
   const { rapier, world } = useRapier();
 
   // stores
+  const phase = useGame( (state) => state.phase );
   const start = useGame( (state) => state.start );
   const player = useGame( (state) => state.player );
   const restart = useGame( (state) => state.restart );
@@ -32,7 +33,7 @@ function PlayerController({ children }) {
     }
   }
 
-  function reset ( player ) {
+  function reset( player ) {
     player.setTranslation({ x: 0, y: 1, z: -0.5 });
     player.setLinvel({ x: 0, y: 0, z: 0 });
     player.setAngvel({ x: 0, y: 0, z: 0 });
@@ -41,7 +42,7 @@ function PlayerController({ children }) {
   React.useEffect(() => {
     const selectorFunction = ( state ) => state.jump;
     const listenerFunction = ( value ) => {
-      if ( !value ) return;
+      if ( !value || phase === 'trapped' ) return;
       
       jump();
     }
@@ -106,7 +107,19 @@ function PlayerController({ children }) {
         torque.z += torqueForce;
         break;
     }
+    if (phase === 'trapped') {
+      player.current.setLinearDamping(6.0);
+      player.current.setAngularDamping(6.0);
 
+      impulse.x = 0;
+      impulse.z = 0;
+      torque.x = 0;
+      torque.z = 0;
+
+    } else {
+      player.current.setLinearDamping(0.5);   // повертаєш у норму
+      player.current.setAngularDamping(0.5);
+    }
     // apply forces
     player.current.applyImpulse( impulse );
     player.current.applyTorqueImpulse(torque);

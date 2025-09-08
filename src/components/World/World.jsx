@@ -58,7 +58,8 @@ function World() {
 function PlayerOnMap({ mapParameters, tiles = [], radius = 1, children }) {
   // stores
   const player = useGame( (state) => state.player );
-  // const restart = useGame( (state) => state.restart );
+  const trapped = useGame( (state) => state.trapped );
+  const restart = useGame( (state) => state.restart );
   const setActiveTraps = useGame( (state) => state.setActiveTraps );
 
   // const [activeChunks, setActiveChunks] = React.useState(new Set());
@@ -74,15 +75,6 @@ function PlayerOnMap({ mapParameters, tiles = [], radius = 1, children }) {
     
     if ( dummyPosition.x !== x || dummyPosition.z !== z ) {
       const currentTile = tiles[z]?.[x] ?? null;
-      
-      // update active chunks
-      // const chunks = new Set();
-      // for (let dx = -radius; dx <= radius; dx++) {
-      //   for (let dz = -radius; dz <= radius; dz++) {
-      //     chunks.add(`${x+dx}:${z+dz}`);
-      //   }
-      // }
-      // setActiveChunks(chunks);
 
       // new position
       dummyPosition.set( x, y, z );
@@ -90,6 +82,7 @@ function PlayerOnMap({ mapParameters, tiles = [], radius = 1, children }) {
       // restart becouse of trap
       if (currentTile?.trap) {
         setActiveTraps( x, z );
+        trapped();
         // restart();
       }
     }
@@ -114,10 +107,10 @@ function PlayerOnMap({ mapParameters, tiles = [], radius = 1, children }) {
   )
 }
 
-function Sensor({ ...delegated }) {
-  return (
-    <Bounds sensor {...delegated} />
-  );
-}
+// function Sensor({ ...delegated }) {
+//   return (
+//     <Bounds sensor {...delegated} />
+//   );
+// }
 
 export default World;

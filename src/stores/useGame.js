@@ -7,7 +7,7 @@ export default create( subscribeWithSelector( ( set ) => {
     mapParameters: { rows: 11, columns: 7, cellSize: 0.95 },
     tiles: [],
     blocksSeed: 12345,
-    phase: 'ready',
+    phase: 'ready', // ready || playing || trapped || end
     player: null,
     activeTraps: {},
     start: () => set( (state) => {
@@ -18,8 +18,12 @@ export default create( subscribeWithSelector( ( set ) => {
       if (state.phase !== 'playing') return {};
       return { phase: 'end' } 
     } ),
+    trapped: () => set( (state) => {
+      if (state.phase !== 'playing') return {};
+      return { phase: 'trapped' }
+    }),
     restart: () => set( (state) => {
-      if (state.phase === 'playing' || state.phase === 'end') {
+      if (state.phase === 'playing' || state.phase === 'end' || state.phase === 'trapped') {
         return { phase: 'ready', blocksSeed: Math.random() };
       }
       return {}; 
