@@ -31,6 +31,7 @@ function Player() {
         angularDamping={0.5}
         position={[ 0, 1, -0.5 ]}
       >
+        
         <mesh castShadow>
           <icosahedronGeometry args={[ 0.3, 1 ]} />
           <meshStandardMaterial flatShading color="mediumpurple" />

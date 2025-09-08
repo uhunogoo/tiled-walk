@@ -9,7 +9,7 @@ export default create( subscribeWithSelector( ( set ) => {
     blocksSeed: 12345,
     phase: 'ready',
     player: null,
-    playerPosition: null,
+    activeTraps: {},
     start: () => set( (state) => {
       if (state.phase !== 'ready') return {};
       return { phase: 'playing' } 
@@ -29,6 +29,11 @@ export default create( subscribeWithSelector( ( set ) => {
     
     return { player }; 
    }),
+   setActiveTraps: ( x, z ) => set( ( state ) => {
+    const key = `${ x }-${ z }`;
+    console.log( state.activeTraps );
+    return {activeTraps: { ...state.activeTraps, [key]: true } }; 
+  }),
    generateMap: () => set( ( state ) => {
     const { rows, columns } = state.mapParameters;
     const dummyMap = range( rows ).map( () => 

@@ -7,17 +7,14 @@ import useGame from '@stores/useGame';
 // components
 import Bounds from '@components/Bounds/Bounds';
 import Tile from '@components/Tile/Tile';
-import usePlayerToGrid from '@hooks/usePlayerToGrid';
 import Field from '@components/Field/Field';
 import { useFrame } from '@react-three/fiber';
 import { worldToGrid } from '@lib/utils';
-// import { range } from '@lib/utils';
 
 
 function World() {
   // store
   const tiles = useGame( (state) => state.tiles );
-  const player = useGame( (state) => state.player );
   const generateMap = useGame( (state) => state.generateMap );
   const mapParameters = useGame( (state) => state.mapParameters );
   
@@ -27,21 +24,22 @@ function World() {
 
   return (
     <>
-
       <mesh scale={[ mapParameters.columns, 1, 2 ]} position={[ 0, -0.5, 0]}>
         <boxGeometry args={[ 1, 1, 1 ]} />
         <meshNormalMaterial />
       </mesh>
 
       <group dispose={ null } position={[ 0, 0.001, -mapParameters.rows * 0.5 - 1 ]}>
-        <PlayerOnMap player={ player } tiles={ tiles } mapParameters={ mapParameters }/>
+        <PlayerOnMap tiles={ tiles } mapParameters={ mapParameters }/>
         
         <Field height={ mapParameters.rows } width={ mapParameters.columns }/>
 
         { tiles.map( ( row, y ) => row.map( ( cell, x ) => 
-          <Tile key={ `${ x }-${ y }` } 
+          <Tile 
+            key={ `${ x }-${ y }` }
+            params={[ x, y ]}
             position={[ x + 0.5 - mapParameters.columns * 0.5, -0.08, y + 0.5 - mapParameters.rows * 0.5 ]} 
-            scale={[ mapParameters.cellSize, 0.2, mapParameters.cellSize ]} 
+            scale={[ mapParameters.cellSize, 0.2, mapParameters.cellSize ]}
             value={ cell.trap }
           />
         ) ) }
@@ -57,9 +55,14 @@ function World() {
   );
 }
 
-function PlayerOnMap({ player, mapParameters, tiles = [], radius = 1, children }) {
-  const restart = useGame( (state) => state.restart );
-  const position = React.useMemo(() => new THREE.Vector3(), []);
+function PlayerOnMap({ mapParameters, tiles = [], radius = 1, children }) {
+  // stores
+  const player = useGame( (state) => state.player );
+  // const restart = useGame( (state) => state.restart );
+  const setActiveTraps = useGame( (state) => state.setActiveTraps );
+
+  const [activeChunks, setActiveChunks] = React.useState(new Set());
+  const dummyPosition = React.useMemo(() => new THREE.Vector3(), []);
 
   useFrame((state, delta) => {
     if ( !player?.current || !mapParameters || !tiles ) return;
@@ -67,29 +70,33 @@ function PlayerOnMap({ player, mapParameters, tiles = [], radius = 1, children }
     const currentPosition = player.current.translation();
     const [ x, y, z ] = worldToGrid( currentPosition, mapParameters);
     
-    if ( position.x !== x || position.z !== z ) {
-      position.set( x, y, z );
+    if ( y > 0.3 ) return;
+    
+    if ( dummyPosition.x !== x || dummyPosition.z !== z ) {
+      const currentTile = tiles[z]?.[x] ?? null;
       
-      const currentTile = tiles[position.z]?.[position.x] ?? null;
+      // new position
+      dummyPosition.set( x, y, z );
       
-      if (currentTile?.trap) restart();
+      // restart becouse of trap
+      if (currentTile?.trap) {
+        setActiveTraps( x, z );
+        // restart();
+      }
     }
   });
     
   return (
     <>
       { children }
-      {/* { !!tiles.length && (
-        coordinates.map( ( position, y ) =>
-          <Tile key={ `${ position.x }-${ position.z }` } 
-            position={[ position.x + 0.5, -0.1, position.z + 0.5 ]} 
-            scale={[ mapParameters.cellSize, 0.2, mapParameters.cellSize ]} 
-            value={ tiles[ position.z ][ position.x ] }
-          />
-        ) 
-      ) } */}
     </>
   )
+}
+
+function Sensor({ ...delegated }) {
+  return (
+    <Bounds sensor {...delegated} />
+  );
 }
 
 export default World;
