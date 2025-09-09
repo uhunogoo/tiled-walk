@@ -7,10 +7,14 @@ import { useFrame } from '@react-three/fiber';
 
 // stores
 import useGame from '@stores/useGame';
+import { useControls } from 'leva';
 
 
 function PlayerController({ children }) {
-  // const playerRef = React.useRef();
+  const { impolseValue, torqueValue } = useControls( 'Player', { 
+    impolseValue: { value: 0.3, min: 0.001, max: 4, step: 0.01 }, 
+    torqueValue: { value: 0.15, min: 0.001, max: 4, step: 0.01 }
+  } );
   const [ subscribeKeys, getKeys ] = useKeyboardControls();
   const { rapier, world } = useRapier();
 
@@ -34,6 +38,9 @@ function PlayerController({ children }) {
   }
 
   function reset( player ) {
+    player.resetForces(true);  // Reset the forces to zero.
+    player.resetTorques(true); // Reset the torques to zero.
+
     player.setTranslation({ x: 0, y: 1, z: -0.5 });
     player.setLinvel({ x: 0, y: 0, z: 0 });
     player.setAngvel({ x: 0, y: 0, z: 0 });
@@ -82,8 +89,8 @@ function PlayerController({ children }) {
     const impulse = { x: 0, y: 0, z: 0 };
     const torque = { x: 0, y: 0, z: 0 };
 
-    const impulseForce = 0.6 * delta;
-    const torqueForce = 0.2 * delta;
+    const impulseForce = impolseValue * delta;
+    const torqueForce = torqueValue * delta;
 
     // movement
     switch (true) {
@@ -109,7 +116,7 @@ function PlayerController({ children }) {
     }
     if (phase === 'trapped') {
       player.current.setLinearDamping(6.0);
-      player.current.setAngularDamping(6.0);
+      player.current.setAngularDamping(12.0);
 
       impulse.x = 0;
       impulse.z = 0;

@@ -43,10 +43,10 @@ function Tile({ value, position, params, ...delegated }) {
           <meshBasicNodeMaterial color={ materialColors[ colorID ] } />
         </mesh>
       ) }
-      <mesh position={ position } { ...delegated }>
+      {/* <mesh position={ position } { ...delegated }>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicNodeMaterial color={ materialColors[ colorID ] } />
-      </mesh>
+      </mesh> */}
     </>
   )
 }

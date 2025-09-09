@@ -24,7 +24,13 @@ export default create( subscribeWithSelector( ( set ) => {
     }),
     restart: () => set( (state) => {
       if (state.phase === 'playing' || state.phase === 'end' || state.phase === 'trapped') {
-        return { phase: 'ready', blocksSeed: Math.random() };
+        const newActiveTraps = {};
+        const oldActiveTraps = state.activeTraps;
+        for (const key in oldActiveTraps) {
+          newActiveTraps[key] = false;
+        }
+
+        return { phase: 'ready', blocksSeed: Math.random(), activeTraps: newActiveTraps };
       }
       return {}; 
    } ),
