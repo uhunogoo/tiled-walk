@@ -10,8 +10,8 @@ import { KeyboardControls, PerspectiveCamera } from '@react-three/drei';
 // components
 import World from '@components/World/World';
 import Player from '@components/Player/Player';
-import PlayerController from '@components/PlayerController/PlayerController';
 import CameraController from '@components/CameraController/CameraController';
+
 
 extend( THREE );
 

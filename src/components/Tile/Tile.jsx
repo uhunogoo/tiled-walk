@@ -24,8 +24,11 @@ function Tile({ value, position, params, ...delegated }) {
   const activeTraps = useGame( (state) => state.activeTraps[ key ] );
   const restart = useGame( (state) => state.restart );
 
+  const isTrapExist = typeof activeTraps === 'boolean';
+
   useGSAP((context, contextSafe) => {
     const target = ref.current;
+
     if (!target || !activeTraps) return;
 
     gsap.to( target.position, {
@@ -37,7 +40,7 @@ function Tile({ value, position, params, ...delegated }) {
 
   return (
     <>
-      { activeTraps && (
+      { isTrapExist && (
         <mesh ref={ ref} position={[  position[0], position[1] - 0.1, position[2]]} { ...delegated }>
           <boxGeometry args={[1, 1, 1]} />
           <meshBasicNodeMaterial color={ materialColors[ colorID ] } />

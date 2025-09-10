@@ -103,8 +103,9 @@ function PlayerOnMap({ mapParameters, tiles = [], radius = 1, children }) {
         if (!activeChunks.has(key)) return null;   // тільки активні
 
         return cell.trap ? (
-          <Sensor
+          <Bounds 
             key={key}
+            sensor
             position={[ x + 0.5 - mapParameters.columns * 0.5, 0.1, z + 0.5 - mapParameters.rows * 0.5 ]}
             args={[ mapParameters.cellSize * 0.25, 0.1, mapParameters.cellSize * 0.25 ]}
             onIntersectionEnter={ () => getIntoTrap( x, z ) }
@@ -115,12 +116,6 @@ function PlayerOnMap({ mapParameters, tiles = [], radius = 1, children }) {
       }) ) }
     </>
   )
-}
-
-function Sensor({ ...delegated }) {
-  return (
-    <Bounds sensor {...delegated} />
-  );
 }
 
 export default World;
