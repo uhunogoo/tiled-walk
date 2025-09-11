@@ -1,15 +1,13 @@
 import React from 'react';
-import * as THREE from 'three/webgpu';
 
 // stores
 import useGame from '@stores/useGame';
 
 // components
-import Bounds from '@components/Bounds/Bounds';
 import Tile from '@components/Tile/Tile';
 import Field from '@components/Field/Field';
-import { useFrame } from '@react-three/fiber';
-import { worldToGrid } from '@lib/utils';
+import Bounds from '@components/Bounds/Bounds';
+import DinamicMap from '@components/DynamicMap/DynamicMap';
 
 
 function World() {
@@ -17,6 +15,7 @@ function World() {
   const tiles = useGame( (state) => state.tiles );
   const generateMap = useGame( (state) => state.generateMap );
   const mapParameters = useGame( (state) => state.mapParameters );
+  const end = useGame( (state) => state.end );
   
   React.useEffect(() => {
     generateMap();
@@ -24,13 +23,13 @@ function World() {
 
   return (
     <>
-      <mesh scale={[ mapParameters.columns, 1, 2 ]} position={[ 0, -0.5, 0]}>
+      <mesh scale={[ mapParameters.columns, 1, 2 ]} position={[ 0, -0.5, 0]} receiveShadow >
         <boxGeometry args={[ 1, 1, 1 ]} />
-        <meshNormalMaterial />
+        <meshStandardNodeMaterial />
       </mesh>
 
       <group dispose={ null } position={[ 0, 0.001, -mapParameters.rows * 0.5 - 1 ]}>
-        <PlayerOnMap tiles={ tiles } mapParameters={ mapParameters }/>
+        <DinamicMap tiles={ tiles } mapParameters={ mapParameters }/>
         
         <Field height={ mapParameters.rows } width={ mapParameters.columns }/>
 
@@ -45,77 +44,22 @@ function World() {
         ) ) }
       </group>
 
-      <mesh scale={[ mapParameters.columns, 1, 2 ]} position={[ 0, -0.5, - 2 - mapParameters.rows ]}>
+      {/* FINISH */}
+      <mesh scale={[ mapParameters.columns, 1, 2 ]} receiveShadow position={[ 0, -0.5, - 2 - mapParameters.rows ]}>
         <boxGeometry args={[ 1, 1, 1 ]} />
-        <meshNormalMaterial />
+        <meshStandardNodeMaterial />
       </mesh>
+      <Bounds 
+        sensor 
+        args={[ mapParameters.columns * 0.5, 1, 1 ]} 
+        position={[ 0, 1, - 2 - mapParameters.rows  ]}
+        onIntersectionEnter={ end }
+      />
 
+      {/* FLOOR */}
       <Bounds args={[ mapParameters.columns * 0.5, 0.1, mapParameters.rows * 0.5 + 2 ]} position={[ 0, -0.1, -mapParameters.rows * 0.5 - 1 ]}/>
     </>
   );
-}
-
-function PlayerOnMap({ mapParameters, tiles = [], radius = 1, children }) {
-  // stores
-  const player = useGame( (state) => state.player );
-  const trapped = useGame( (state) => state.trapped );
-  // const restart = useGame( (state) => state.restart );
-  const setActiveTraps = useGame( (state) => state.setActiveTraps );
-
-  const [activeChunks, setActiveChunks] = React.useState(new Set());
-  const dummyPosition = React.useMemo(() => new THREE.Vector3(), []);
-
-  function getIntoTrap( x, z ) {
-    setActiveTraps( x, z );
-    trapped();
-    // restart();
-  }
-
-  useFrame((state, delta) => {
-    if ( !player?.current || !mapParameters || !tiles ) return;
-    
-    const currentPosition = player.current.translation();
-    const [ x, y, z ] = worldToGrid( currentPosition, mapParameters);
-    
-    if ( y > 0.3 ) return;
-    
-    if ( dummyPosition.x !== x || dummyPosition.z !== z ) {
-      // const currentTile = tiles[z]?.[x] ?? null;
-      
-      // update active chunks
-      const chunks = new Set();
-      for (let dx = -radius; dx <= radius; dx++) {
-        for (let dz = -radius; dz <= radius; dz++) {
-          chunks.add(`${x+dx}:${z+dz}`);
-        }
-      }
-      setActiveChunks(chunks);
-
-      // new position
-      dummyPosition.set( x, y, z );
-    }
-  });
-    
-  return (
-    <>
-    { tiles.map((row, z) => row.map((cell, x) => {
-        const key = `${x}:${z}`;
-        if (!activeChunks.has(key)) return null;   // тільки активні
-
-        return cell.trap ? (
-          <Bounds 
-            key={key}
-            sensor
-            position={[ x + 0.5 - mapParameters.columns * 0.5, 0.1, z + 0.5 - mapParameters.rows * 0.5 ]}
-            args={[ mapParameters.cellSize * 0.25, 0.1, mapParameters.cellSize * 0.25 ]}
-            onIntersectionEnter={ () => getIntoTrap( x, z ) }
-            // trap={cell.trap}
-            // mapParameters={mapParameters}
-          />
-        ) : null;
-      }) ) }
-    </>
-  )
 }
 
 export default World;

@@ -132,10 +132,6 @@ function PlayerController({ children }) {
     player.current.applyTorqueImpulse(torque);
     
     const playerPosition = player.current.translation();
-    // end game
-    // if ( playerPosition.z < - ( blocksCount * 4 + 2) ) {
-    //   end();
-    // }
 
     
     // restart

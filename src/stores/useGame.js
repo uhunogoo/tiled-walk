@@ -9,7 +9,7 @@ export default create( subscribeWithSelector( ( set ) => {
     blocksSeed: 12345,
     phase: 'ready', // ready || playing || trapped || end
     player: null,
-    activeTraps: {},
+    visitedTiles: {},
     start: () => set( (state) => {
       if (state.phase !== 'ready') return {};
       return { phase: 'playing' } 
@@ -23,14 +23,17 @@ export default create( subscribeWithSelector( ( set ) => {
       return { phase: 'trapped' }
     }),
     restart: () => set( (state) => {
-      if (state.phase === 'playing' || state.phase === 'end' || state.phase === 'trapped') {
+      if (state.phase === 'playing' || state.phase === 'trapped') {
         const newActiveTraps = {};
-        const oldActiveTraps = state.activeTraps;
+        const oldActiveTraps = state.visitedTiles;
         for (const key in oldActiveTraps) {
-          newActiveTraps[key] = false;
+          newActiveTraps[key] = { trap: false, visited: true };
         }
 
-        return { phase: 'ready', blocksSeed: Math.random(), activeTraps: newActiveTraps };
+        return { phase: 'ready', blocksSeed: 12345, visitedTiles: newActiveTraps };
+      }
+      if ( state.phase === 'end') {
+        return { phase: 'ready', blocksSeed: Math.random(), visitedTiles: {} };
       }
       return {}; 
    } ),
@@ -39,10 +42,14 @@ export default create( subscribeWithSelector( ( set ) => {
     
     return { player }; 
    }),
-   setActiveTraps: ( x, z ) => set( ( state ) => {
+   setVisitedTiles: ( x, z, trap ) => set( ( state ) => {
     const key = `${ x }-${ z }`;
-    console.log( state.activeTraps );
-    return {activeTraps: { ...state.activeTraps, [key]: true } }; 
+    
+    const newTile = {
+      trap: trap,
+      visited: true,
+    };
+    return {visitedTiles: { ...state.visitedTiles, [key]: newTile } }; 
   }),
    generateMap: () => set( ( state ) => {
     const { rows, columns } = state.mapParameters;

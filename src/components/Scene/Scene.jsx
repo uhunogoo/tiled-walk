@@ -11,6 +11,8 @@ import { KeyboardControls, PerspectiveCamera } from '@react-three/drei';
 import World from '@components/World/World';
 import Player from '@components/Player/Player';
 import CameraController from '@components/CameraController/CameraController';
+import Environment from '@components/Environment/Environment';
+import Interface from '@components/Interface/Interface';
 
 
 extend( THREE );
@@ -33,6 +35,7 @@ function Scene() {
         style={{ position: 'fixed', top: 0, left: 0, height: "100vh", width: "100vw" }}
         camera={{ position: [4, 4, 0], fov: 45 }}
         frameloop={ frameloop }
+        shadows
         gl={(props) => {
           const renderer = new THREE.WebGPURenderer({
             powerPreference: "high-performance",
@@ -48,9 +51,8 @@ function Scene() {
           return renderer;
         }}
       >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[0, 10, 5]} intensity={1} />
-        
+        <Environment />
+
         <React.Suspense fallback={null}>
           <Physics debug={ debug } gravity={[0, -9.81, 0]}>
             <Player />
@@ -61,6 +63,7 @@ function Scene() {
         </React.Suspense>
         {/* <OrbitControls makeDefault /> */}
       </Canvas>
+      <Interface />
     </KeyboardControls>
   )
 }

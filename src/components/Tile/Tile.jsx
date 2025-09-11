@@ -16,40 +16,35 @@ const materialColors = [
 ];
 
 function Tile({ value, position, params, ...delegated }) {
+  const ref = React.useRef(null);
+  
   const colorID = value ? 1 : 0;
   const key = `${params[0]}-${params[1]}`;
-  const ref = React.useRef(null);
 
   // stores
-  const activeTraps = useGame( (state) => state.activeTraps[ key ] );
   const restart = useGame( (state) => state.restart );
-
-  const isTrapExist = typeof activeTraps === 'boolean';
+  const visitedTiles = useGame( (state) => state.visitedTiles[ key ] );
 
   useGSAP((context, contextSafe) => {
     const target = ref.current;
-
-    if (!target || !activeTraps) return;
+    if ( !target || !visitedTiles.trap ) return;
 
     gsap.to( target.position, {
       y: 0.1,
       duration: 0.4,
       onComplete: () => restart()
     });
-  }, { dependencies: [ activeTraps ] }); 
+
+  }, { dependencies: [ visitedTiles ] }); 
 
   return (
     <>
-      { isTrapExist && (
+      { visitedTiles?.visited && (
         <mesh ref={ ref} position={[  position[0], position[1] - 0.1, position[2]]} { ...delegated }>
           <boxGeometry args={[1, 1, 1]} />
           <meshBasicNodeMaterial color={ materialColors[ colorID ] } />
         </mesh>
       ) }
-      {/* <mesh position={ position } { ...delegated }>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshBasicNodeMaterial color={ materialColors[ colorID ] } />
-      </mesh> */}
     </>
   )
 }

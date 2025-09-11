@@ -29,7 +29,7 @@ function Field({ height = null, width = null }) {
     return {
       nodes: {
         colorNode: colorNode,
-        shadow: true,
+        // shadow: true,
         transparent: true
       },
       uniforms,
@@ -38,9 +38,9 @@ function Field({ height = null, width = null }) {
 
   return (
     <>
-      <mesh rotation-x={ -Math.PI / 2 }>
+      <mesh rotation-x={ - Math.PI * 0.5 } receiveShadow >
         <planeGeometry args={[ width, height, 1, 1 ]} />
-        <meshBasicNodeMaterial { ...nodes } />
+        <meshStandardNodeMaterial { ...nodes } />
       </mesh>
     </>
   );
