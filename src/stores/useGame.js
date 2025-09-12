@@ -4,7 +4,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 
 export default create( subscribeWithSelector( ( set ) => {
   return {
-    mapParameters: { rows: 11, columns: 7, cellSize: 0.95 },
+    mapParameters: { rows: 3, columns: 7, cellSize: 0.95 },
     tiles: [],
     blocksSeed: 12345,
     phase: 'ready', // ready || playing || trapped || end
@@ -33,7 +33,7 @@ export default create( subscribeWithSelector( ( set ) => {
         return { phase: 'ready', blocksSeed: 12345, visitedTiles: newActiveTraps };
       }
       if ( state.phase === 'end') {
-        return { phase: 'ready', blocksSeed: Math.random(), visitedTiles: {} };
+        return { phase: 'ready', blocksSeed: 12345, visitedTiles: {} };
       }
       return {}; 
    } ),

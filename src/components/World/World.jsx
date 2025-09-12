@@ -8,6 +8,7 @@ import Tile from '@components/Tile/Tile';
 import Field from '@components/Field/Field';
 import Bounds from '@components/Bounds/Bounds';
 import DinamicMap from '@components/DynamicMap/DynamicMap';
+import BushInstance from '@components/Bush/Bush';
 
 
 function World() {
@@ -27,6 +28,13 @@ function World() {
         <boxGeometry args={[ 1, 1, 1 ]} />
         <meshStandardNodeMaterial />
       </mesh>
+
+      <BushInstance 
+        count={ mapParameters.rows + 4 } 
+        columns={ 2 } 
+        columnStep={ mapParameters.columns } 
+        position={[ - mapParameters.columns * 0.5 - 0.5, 0.25, 1 - 0.5 ]} 
+      />
 
       <group dispose={ null } position={[ 0, 0.001, -mapParameters.rows * 0.5 - 1 ]}>
         <DinamicMap tiles={ tiles } mapParameters={ mapParameters }/>
@@ -51,8 +59,8 @@ function World() {
       </mesh>
       <Bounds 
         sensor 
-        args={[ mapParameters.columns * 0.5, 1, 1 ]} 
-        position={[ 0, 1, - 2 - mapParameters.rows  ]}
+        args={[ mapParameters.columns * 0.5, 1, 0.1 ]} 
+        position={[ 0, 1, - 1 - 0.5 - mapParameters.rows  ]}
         onIntersectionEnter={ end }
       />
 

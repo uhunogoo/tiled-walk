@@ -7,7 +7,7 @@ function Bounds({ ...delegated }) {
       <CuboidCollider 
         args={[ 0.5, 0.1, 0.5 ]}
         restitution={ 0.2 } 
-        friction={ 1 } 
+        friction={ 1 }
         {...delegated} 
       />
     </RigidBody>

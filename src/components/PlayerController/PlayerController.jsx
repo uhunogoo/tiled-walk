@@ -38,8 +38,9 @@ function PlayerController({ children }) {
   }
 
   function reset( player ) {
-    player.resetForces(true);  // Reset the forces to zero.
-    player.resetTorques(true); // Reset the torques to zero.
+    if (!player) return;
+    player.resetForces(true);  // Reset the forces to zero
+    player.resetTorques(true); // Reset the torques to zero
 
     player.setTranslation({ x: 0, y: 1, z: -0.5 });
     player.setLinvel({ x: 0, y: 0, z: 0 });
@@ -114,9 +115,12 @@ function PlayerController({ children }) {
         torque.z += torqueForce;
         break;
     }
-    if (phase === 'trapped') {
-      player.current.setLinearDamping(6.0);
-      player.current.setAngularDamping(12.0);
+    if (phase === 'trapped' || phase === 'end') {
+      const { x, z } = player.current.linvel(); // get current forces
+      const currentForces = Math.max( Math.abs( x ) + Math.abs( z ), 1 );
+      
+      player.current.setLinearDamping( currentForces * 4 );
+      player.current.setAngularDamping( currentForces * 8 );
 
       impulse.x = 0;
       impulse.z = 0;
@@ -124,7 +128,8 @@ function PlayerController({ children }) {
       torque.z = 0;
 
     } else {
-      player.current.setLinearDamping(0.5);   // повертаєш у норму
+      // return to normal
+      player.current.setLinearDamping(0.5);
       player.current.setAngularDamping(0.5);
     }
     // apply forces
