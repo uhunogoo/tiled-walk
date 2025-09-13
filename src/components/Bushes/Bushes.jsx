@@ -7,7 +7,7 @@ import useBush from '@hooks/use-bush';
 // Defaults
 const PI = Math.PI;
 
-function BushInstance({ count = 1, columns = 1, columnStep = 1, ...delegated }) {
+function Bushes({ count = 1, columns = 1, columnStep = 1, ...delegated }) {
   const bush = useBush();
   const data = React.useMemo(() => {
     const data = range( count * columns ).map((item, i) => {
@@ -29,7 +29,6 @@ function BushInstance({ count = 1, columns = 1, columnStep = 1, ...delegated }) 
   return (
     <>
       <Instances range={ count * columns } geometry={ bush } castShadow {...delegated} frustumCulled={ true } computeBoundingBox={true} >
-        {/* <meshNormalNodeMaterial side={ THREE.DoubleSide } /> */}
         <LeafMaterial />
         { data.map((props, i) => (
           <Instance key={i} {...props} />
@@ -39,4 +38,4 @@ function BushInstance({ count = 1, columns = 1, columnStep = 1, ...delegated }) 
   );
 }
 
-export default BushInstance;
+export default Bushes;

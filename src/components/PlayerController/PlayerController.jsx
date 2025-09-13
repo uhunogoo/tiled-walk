@@ -42,7 +42,7 @@ function PlayerController({ children }) {
     player.resetForces(true);  // Reset the forces to zero
     player.resetTorques(true); // Reset the torques to zero
 
-    player.setTranslation({ x: 0, y: 1, z: -0.5 });
+    player.setTranslation({ x: 0, y: 1, z: 0.5 });
     player.setLinvel({ x: 0, y: 0, z: 0 });
     player.setAngvel({ x: 0, y: 0, z: 0 });
   };

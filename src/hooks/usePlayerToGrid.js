@@ -32,9 +32,6 @@ function worldToGrid( position, map ) {
 
   const onGridX = Math.floor( position.x + columns * 0.5 );
   const onGridZ = Math.round( position.z + ( rows - cellSize * 0.5 + 1) );
-
-  // const snapX = Math.max( 0, Math.min(columns - 1, onGridX) );
-  // const snapZ = Math.max( 0, Math.min(rows - 1, onGridZ) );
   
   return [ onGridX, position.y, onGridZ ];
 }

@@ -5,8 +5,13 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import useGame from '@stores/useGame';
 import { CameraControls } from '@react-three/drei';
+import { useControls } from 'leva';
 
 function CameraController() {
+  const { cameraDisnace, target } = useControls( 'Camera', { 
+    cameraDisnace: { value: { x: 0, y: 3.5, z: 3 }, step: 0.1 },
+    target: { value: { x: 0, y: 0.25, z: -1 }, step: 0.1 }
+  } );
   const camera = useThree( (state) => state.camera );
 
   // stores
@@ -23,11 +28,12 @@ function CameraController() {
     // control camera position
     const playerPosition = player.current.translation();
     cameraPosition.copy( playerPosition );
-    cameraPosition.y += 3.5;
-    cameraPosition.z += 2.25;
+    cameraPosition.y += cameraDisnace.y;
+    cameraPosition.z += cameraDisnace.z;
     
     cameraTarget.copy(playerPosition);
-    cameraTarget.y += 0.25;
+    cameraTarget.y += target.y;
+    cameraTarget.z += target.z;
     
     ref.current.setLookAt( 
       ...cameraPosition,

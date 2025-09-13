@@ -7,7 +7,7 @@ const PI = Math.PI;
 
 function useBush() {
   const bushInstance = React.useMemo(() => {
-    const count = 30;
+    const count = 80;
     const planes = [];
 
     for (let i = 0; i < count; i++ ) {

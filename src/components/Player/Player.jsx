@@ -29,7 +29,7 @@ function Player() {
         friction={1} 
         linearDamping={0.5}
         angularDamping={0.5}
-        position={[ 0, 1, -0.5 ]}
+        position={[ 0, 1, 0.5 ]}
       >
         
         <mesh castShadow>

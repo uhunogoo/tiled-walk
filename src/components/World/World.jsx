@@ -8,15 +8,15 @@ import Tile from '@components/Tile/Tile';
 import Field from '@components/Field/Field';
 import Bounds from '@components/Bounds/Bounds';
 import DinamicMap from '@components/DynamicMap/DynamicMap';
-import BushInstance from '@components/Bush/Bush';
+// import Bushes from '@components/Bushes/Bushes';
 
 
 function World() {
   // store
+  const end = useGame( (state) => state.end );
   const tiles = useGame( (state) => state.tiles );
   const generateMap = useGame( (state) => state.generateMap );
   const mapParameters = useGame( (state) => state.mapParameters );
-  const end = useGame( (state) => state.end );
   
   React.useEffect(() => {
     generateMap();
@@ -29,12 +29,12 @@ function World() {
         <meshStandardNodeMaterial />
       </mesh>
 
-      <BushInstance 
+      {/* <Bushes 
         count={ mapParameters.rows + 4 } 
         columns={ 2 } 
         columnStep={ mapParameters.columns } 
         position={[ - mapParameters.columns * 0.5 - 0.5, 0.25, 1 - 0.5 ]} 
-      />
+      /> */}
 
       <group dispose={ null } position={[ 0, 0.001, -mapParameters.rows * 0.5 - 1 ]}>
         <DinamicMap tiles={ tiles } mapParameters={ mapParameters }/>
@@ -69,5 +69,7 @@ function World() {
     </>
   );
 }
+
+
 
 export default World;

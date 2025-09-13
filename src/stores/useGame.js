@@ -1,10 +1,11 @@
 import { generateMap, range } from '@lib/utils';
+import { random } from 'xoshiro128/random';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 
 export default create( subscribeWithSelector( ( set ) => {
   return {
-    mapParameters: { rows: 3, columns: 7, cellSize: 0.95 },
+    mapParameters: { rows: 11, columns: 7, cellSize: 0.95 },
     tiles: [],
     blocksSeed: 12345,
     phase: 'ready', // ready || playing || trapped || end
@@ -30,10 +31,10 @@ export default create( subscribeWithSelector( ( set ) => {
           newActiveTraps[key] = { trap: false, visited: true };
         }
 
-        return { phase: 'ready', blocksSeed: 12345, visitedTiles: newActiveTraps };
+        return { phase: 'ready', visitedTiles: newActiveTraps };
       }
       if ( state.phase === 'end') {
-        return { phase: 'ready', blocksSeed: 12345, visitedTiles: {} };
+        return { phase: 'ready', visitedTiles: {} };
       }
       return {}; 
    } ),
@@ -63,9 +64,7 @@ export default create( subscribeWithSelector( ( set ) => {
 
     generateMap( rows, columns, state.blocksSeed, dummyMap );
 
-    // const cells = generateMap( rows - 2, columns, state.blocksSeed );
-    // return { tiles: [ ...map ] };
-    return { tiles: dummyMap };
+    return { tiles: dummyMap, blocksSeed: random.int( 1, 99999 ) };
    }),
   } 
 }) );

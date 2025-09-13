@@ -1,7 +1,6 @@
 import React from 'react';
 // import Bounds from '@components/Bounds/Bounds';
 import useGame from '@stores/useGame';
-import { worldToGrid } from '@lib/utils';
 
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
